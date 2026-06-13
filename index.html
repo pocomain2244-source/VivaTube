@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIVA TUBE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #0f0f0f;
+            --bg-sidebar: #0f0f0f;
+            --bg-card: #1f1f1f;
+            --bg-input: #272727;
+            --accent-orange: #ff6600;
+            --accent-yellow: #ffcc00;
+            --accent-blue: #00ccff;
+            --accent-purple: #cc33ff;
+            --text-main: #f1f1f1;
+            --text-sub: #aaaaaa;
+            --border-subtle: rgba(255, 255, 255, 0.1);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: "Roboto", "Arial", sans-serif;
+            overflow-x: hidden;
+        }
+
+        header {
+            background-color: var(--bg-main);
+            padding: 0 16px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+        .menu-btn:hover { background-color: var(--bg-input); }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo i {
+            color: var(--accent-orange);
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .search-container {
+            flex: 0 1 600px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box {
+            width: 100%;
+            display: flex;
+            background-color: var(--bg-main);
+            border: 1px solid #303030;
+            border-radius: 40px 0 0 40px;
+            padding-left: 16px;
+            overflow: hidden;
+        }
+
+        .search-box:focus-within {
+            border-color: var(--accent-orange);
+        }
+
+        .search-box input {
+            width: 100%;
+            background: none;
+            border: none;
+            height: 40px;
+            color: white;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-btn {
+            background-color: var(--bg-input);
+            border: 1px solid #303030;
+            border-left: none;
+            width: 64px;
+            height: 42px;
+            border-radius: 0 40px 40px 0;
+            color: var(--text-main);
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-btn:hover { background-color: #333; }
+
+        .app-container {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        .sidebar {
+            width: 240px;
+            background-color: var(--bg-sidebar);
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            padding: 6px 12px;
+            letter-spacing: 0.5px;
+            margin-top: 12px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .sidebar-item i {
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--bg-input);
+        }
+
+        .sidebar-item.active {
+            background-color: rgba(255, 102, 0, 0.15);
+            color: var(--accent-orange);
+            font-weight: 700;
+        }
+        
+        .sidebar-item.active i {
+            color: var(--accent-yellow);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 24px;
+        }
+
+        .main-content.feed-mode {
+            grid-template-columns: 1fr;
+        }
+
+        .player-section {
+            display: none;
+        }
+
+        .player-section.active {
+            display: block;
+        }
+        
+        .video-wrapper {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+        }
+
+        #mainPlayer {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-info {
+            margin-top: 16px;
+            position: relative;
+        }
+
+        .video-title {
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .video-metadata {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .video-creator {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            align-content: start;
+        }
+
+        .sidebar-next-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            display: none;
+        }
+        
+        .sidebar-next-list.active {
+            display: flex;
+        }
+
+        .yt-card {
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .yt-thumbnail {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        .yt-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .yt-card:hover .yt-thumbnail img {
+            transform: scale(1.03);
+        }
+
+        .yt-details {
+            display: flex;
+            gap: 12px;
+            padding: 0 4px;
+        }
+
+        .yt-info {
+            flex: 1;
+        }
+
+        .yt-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.4;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .yt-info .creator {
+            font-size: 12px;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
+        .tag {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+        .tag-horror { background-color: rgba(255, 102, 0, 0.2); color: var(--accent-orange); }
+        .tag-funny { background-color: rgba(255, 204, 0, 0.2); color: var(--accent-yellow); }
+        .tag-games { background-color: rgba(0, 204, 255, 0.2); color: var(--accent-blue); }
+        .tag-movies { background-color: rgba(204, 51, 255, 0.2); color: var(--accent-purple); }
+
+        .fav-card-btn {
+            background: none;
+            border: none;
+            color: #555;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px;
+            align-self: flex-start;
+            transition: var(--transition);
+        }
+        .fav-card-btn:hover { color: var(--accent-orange); }
+        .fav-card-btn.active { color: var(--accent-orange); }
+
+        .player-fav-btn {
+            background: var(--bg-input);
+            border: none;
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .player-fav-btn:hover { background-color: #3f3f3f; }
+        .player-fav-btn.active {
+            background-color: rgba(255, 102, 0, 0.2);
+            color: var(--accent-orange);
+        }
+
+        /* --- Estilos de la Pantalla de Bloqueo --- */
+        #lockScreen {
+            position: fixed;
+            inset: 0;
+            background: #050505;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        #lockCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .lock-box {
+            background: rgba(18, 18, 18, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            position: relative;
+            z-index: 2;
+        }
+
+        .lock-box h2 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .lock-box p { color: var(--text-sub); font-size: 14px; }
+
+        /* Contenedor del input con el ojo para ver contraseña */
+        .password-wrapper {
+            position: relative;
+            width: 100%;
+            margin: 24px 0 16px 0;
+        }
+
+        .lock-box input {
+            width: 100%;
+            padding: 16px 50px 16px 16px;
+            background: var(--bg-input);
+            border: 1px solid #3c3c3c;
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            outline: none;
+            transition: var(--transition);
+        }
+        .lock-box input:focus { border-color: var(--accent-orange); }
+
+        .toggle-password-btn {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-sub);
+            font-size: 18px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .toggle-password-btn:hover { color: white; }
+
+        .lock-box button.btn-submit {
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-yellow));
+            color: #000;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .lock-box button.btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #aaa; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-orange); }
+    </style>
+</head>
+<body>
+
+    <div id="lockScreen">
+        <canvas id="lockCanvas"></canvas>
+        <div class="lock-box">
+            <h2><i class="fa-solid fa-play"></i> VIVA TUBE</h2>
+            <p>Introduce la clave de acceso premium</p>
+            <div class="password-wrapper">
+                <input type="password" id="passwordInput" placeholder="Contraseña..." autocomplete="off">
+                <button class="toggle-password-btn" onclick="togglePasswordVisibility()" id="eyeBtn">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+            <button class="btn-submit" onclick="checkPassword()">Entrar</button>
+            <div id="errorMsg" style="color:#ff4444; margin-top:12px; font-size:14px; font-weight:600;"></div>
+        </div>
+    </div>
+
+    <div id="mainContent" style="display: none;">
+        <header>
+            <div class="header-left">
+                <button class="menu-btn"><i class="fa-solid fa-bars"></i></button>
+                <div class="logo">
+                    <i class="fa-solid fa-play-circle"></i>
+                    <span>VIVA TUBE</span>
+                </div>
+            </div>
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Buscar videos..." onkeyup="filterVideos()">
+                </div>
+                <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            <div style="width: 40px;"></div>
+        </header>
+
+        <div class="app-container">
+            <div class="sidebar">
+                <div onclick="switchTab('all')" class="sidebar-item active" id="side-all">
+                    <i class="fa-solid fa-house"></i> <span>Inicio</span>
+                </div>
+                <div onclick="switchTab('favorites')" class="sidebar-item" id="side-favorites">
+                    <i class="fa-solid fa-heart"></i> <span>Favoritos</span>
+                </div>
+                
+                <div class="sidebar-section-title">Categorías</div>
+                <div onclick="switchTab('horror')" class="sidebar-item" id="side-horror">
+                    <i class="fa-solid fa-ghost"></i> <span>Horror</span>
+                </div>
+                <div onclick="switchTab('funny')" class="sidebar-item" id="side-funny">
+                    <i class="fa-solid fa-face-laugh-squint"></i> <span>Funny</span>
+                </div>
+                <div onclick="switchTab('games')" class="sidebar-item" id="side-games">
+                    <i class="fa-solid fa-gamepad"></i> <span>Games</span>
+                </div>
+                <div onclick="switchTab('movies')" class="sidebar-item" id="side-movies">
+                    <i class="fa-solid fa-film"></i> <span>Movies</span>
+                </div>
+            </div>
+
+            <div class="main-content feed-mode" id="mainContentArea">
+                <div id="leftColumn">
+                    <div class="videos-grid" id="videosGrid"></div>
+
+                    <div class="player-section" id="playerSection">
+                        <div class="video-wrapper">
+                            <video id="mainPlayer" controls></video>
+                        </div>
+                        <div class="video-info">
+                            <h2 id="mainTitle" class="video-title">-</h2>
+                            <div class="video-metadata">
+                                <div id="mainCreator" class="video-creator">-</div>
+                                <button onclick="toggleFavoriteCurrent()" class="player-fav-btn" id="currentFavoriteBtn">
+                                    <i class="fa-solid fa-heart"></i> <span>Añadir a favoritos</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-next-list" id="sidebarNextList">
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px;">Videos recomendados</h3>
+                    <div id="nextVideosContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Lista de videos con los nuevos añadidos
+        let videos = [
+            { 
+                id: 1, 
+                title: "I Thought It Couldn’t Get Worse", 
+                src: "I Thought It Couldn’t Get Worse.mp4", 
+                thumb: "https://tse3.mm.bing.net/th/id/OVP.7ACRClC_vqC9kGwYiolqrAHgFo?pid=Api&h=360&w=480&c=7&rs=1.jpg",
+                creator: "Twixxel",
+                category: "horror"
+            },
+            { 
+                id: 2, 
+                title: "Mulberry County", 
+                src: "Mulberry County.mp4", 
+                thumb: "https://tse4.mm.bing.net/th/id/OIP.8PC1K3eDQJqLCmb0SEE2GQHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "Twixxel",
+                category: "horror"
+            },
+            { 
+                id: 3, 
+                title: "Something is Knocking at Your Door", 
+                src: "Something is Knocking at Your Door.mp4", 
+                thumb: "https://tse4.mm.bing.net/th/id/OIF.q7htOn9nKCKI0VyXkZv1IQ?pid=Api&P=0&h=180.jpg",
+                creator: "Thatmob",
+                category: "horror"
+            },
+            { 
+                id: 4, 
+                title: "They are searching me", 
+                src: "They are searching me.mp4", 
+                thumb: "https://tse4.mm.bing.net/th/id/OVP.5pHHnEw-323FPrqwZ3DrLgHgFo?pid=Api&h=360&w=480&c=7&rs=1.jpg",
+                creator: "khanhsmc",
+                category: "horror"
+            },
+            { 
+                id: 5, 
+                title: "The Entity", 
+                src: "The Entity.mp4", 
+                thumb: "https://tse2.mm.bing.net/th/id/OIP.2yInuRHc9rIwR2OE12ZfMwHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "DylanMc",
+                category: "horror"
+            },
+            { 
+                id: 6, 
+                title: "Tatuajes Falsos", 
+                src: "Tatuajes Falsos.mp4", 
+                thumb: "https://tse1.mm.bing.net/th/id/OIP.fy6sIJapH5LHxAxBQafa_wHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "Rey de las bromas",
+                category: "funny"
+            },
+            { 
+                id: 7, 
+                title: "Anexando a mi abuelo", 
+                src: "Anexando a mi abuelo.mp4", 
+                thumb: "https://tse3.mm.bing.net/th/id/OIP.hLNQZOrkadNvmAhIc2jQ7QHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "Rey de las bromas",
+                category: "funny"
+            },
+            // NUEVOS VIDEOS - CATEGORÍA FUNNY
+            { 
+                id: 8, 
+                title: "Broma al Babo de Temu", 
+                src: "Broma al Babo de Temu.mp4", 
+                thumb: "https://tse3.mm.bing.net/th/id/OIP.Ntirh2OKwEIYZ6MnhegUUAHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "Rey de las bromas",
+                category: "funny"
+            },
+            { 
+                id: 9, 
+                title: "(BROMA) A un mago termina mal", 
+                src: "(BROMA) A un mago termina mal.mp4", 
+                thumb: "https://tse1.mm.bing.net/th/id/OIP.7EShLtxSCUHUOnpKB97qRwHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "Rey de las bromas",
+                category: "funny"
+            },
+            // VIDEOS DE MUESTRA PARA GAMES
+            { 
+                id: 12, 
+                title: "MINECRAFT PERO EMPEZAMOS EN UN SOLO BLOQUE 😱", 
+                src: "MINECRAFT PERO EMPEZAMOS EN UN SOLO BLOQUE 😱.mp4", 
+                thumb: "https://tse3.mm.bing.net/th/id/OIP.cgmJ5dmCH1ujKeclMwKzBgHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "El mariana",
+                category: "games"
+            },
+            { 
+                id: 13, 
+                title: "Escapando Del Mejor Backrooms Multijugador Que Existe _ Escape The Backrooms", 
+                src: "Escapando Del Mejor Backrooms Multijugador Que Existe _ Escape The Backrooms.mp4", 
+                thumb: "https://tse1.mm.bing.net/th/id/OIP.BCCcK2TQe80fOYB1_52UuQHaEP?pid=Api&P=0&h=180.jpg",
+                creator: "Omenasito",
+                category: "games"
+            },
+            { 
+                id: 14, 
+                title: "I Survived 100 Days In Realistic Minecraft", 
+                src: "I Survived 100 Days In Realistic Minecraft.mp4", 
+                thumb: "https://tse2.mm.bing.net/th/id/OIP.-ShBBMu_512OrDlXx-AYHwHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "MrBeats Gaming",
+                category: "games"
+            },
+            { 
+                id: 15, 
+                title: "El Telefono Negro _ Te la Cuento", 
+                src: "El Telefono Negro _ Te la Cuento.mp4", 
+                thumb: "https://tse1.mm.bing.net/th/id/OIP.yLR-WCvAH8IjVUjdZsnw_AHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "TelaCuento",
+                category: "movies"
+            },
+            { 
+                id: 16, 
+                title: "Terrifier 3 _ Te la Cuento", 
+                src: "Terrifier 3 _ Te la Cuento.mp4", 
+                thumb: "https://tse3.mm.bing.net/th/id/OIP.uKv6W4eU8Y0tBXQeimFLNgHaDt?pid=Api&P=0&h=180.jpg",
+                creator: "TelaCuento",
+                category: "movies"
+            },
+            { 
+                id: 17, 
+                title: "welcome to derry resumen", 
+                src: "welcome to derry resumen.mp4", 
+                thumb: "https://tse1.mm.bing.net/th/id/OIP.VxhHKfIT4RWJUdA2GW2g2QHaDH?pid=Api&P=0&h=180.jpg",
+                creator: "ENMINUTOS",
+                category: "movies"
+            },
+            { 
+                id: 18, 
+                title: "El Conjuro 4 _ Te la Cuento", 
+                src: "El Conjuro 4 _ Te la Cuento.mp4", 
+                thumb: "https://tse4.mm.bing.net/th/id/OIP.tkXEKOJsZeH6x_MmKf2jmAHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "TelaCuento",
+                category: "movies"
+            },
+            { 
+                id: 19, 
+                title: "mi primera vez en R.E.P.O con THIAGO, RUSHLAI y JUAN", 
+                src: "mi primera vez en R.E.P.O con THIAGO, RUSHLAI y JUAN.mp4", 
+                thumb: "https://tse2.mm.bing.net/th/id/OIP.oYS-hQzB5GTe8BugZ8G0FAHaEK?pid=Api&P=0&h=180.jpg",
+                creator: "RobleisIUTU",
+                category: "games"
+            },
+            { 
+                id: 20, 
+                title: "LEFT 4 DEAD con MAMÁ COCO 😭", 
+                src: "LEFT 4 DEAD con MAMÁ COCO 😭.mp4", 
+                thumb: "https://tse2.mm.bing.net/th/id/OIP.bknYzPq1M4LcA1QHSXH50wHaEM?pid=Api&P=0&h=180.jpg",
+                creator: "AlecchiMan",
+                category: "games"
+            }
+        ];
+
+        let favorites = JSON.parse(localStorage.getItem('vivatubeFavorites')) || [];
+        let currentTab = 'all'; 
+        let isPlaying = false;
+        const correctPassword = "vivatube2026"; 
+        let canvasAnimationId;
+
+        // --- SISTEMA DE CANVAS CORREGIDO ---
+        const canvas = document.getElementById('lockCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        // Códigos unicode nativos de FontAwesome para garantizar que se rendericen bien
+        const icons = [
+            { text: '\uf6e2', color: '#ff6600' }, // fa-ghost
+            { text: '\uf59b', color: '#ffcc00' }, // fa-face-laugh-squint
+            { text: '\uf11b', color: '#00ccff' }, // fa-gamepad
+            { text: '\uf008', color: '#cc33ff' }  // fa-film (Movies)
+        ];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(initialRandomY = false) {
+                this.reset(initialRandomY);
+            }
+
+            reset(initialRandomY = false) {
+                this.x = Math.random() * canvas.width;
+                // Si es el inicio, se esparcen por la pantalla; si no, nacen estrictamente arriba
+                this.y = initialRandomY ? Math.random() * canvas.height : -40; 
+                this.size = Math.random() * 14 + 16; 
+                this.speed = Math.random() * 1.2 + 0.6; 
+                this.icon = icons[Math.floor(Math.random() * icons.length)];
+                this.opacity = 0;
+                this.maxOpacity = Math.random() * 0.3 + 0.15; 
+                this.fadeSpeed = Math.random() * 0.008 + 0.004;
+                this.phase = 'fadeIn';
+            }
+
+            update() {
+                this.y += this.speed;
+
+                if (this.phase === 'fadeIn') {
+                    this.opacity += this.fadeSpeed;
+                    if (this.opacity >= this.maxOpacity) {
+                        this.opacity = this.maxOpacity;
+                        if (this.y > canvas.height * 0.4) this.phase = 'fadeOut';
+                    }
+                } else if (this.phase === 'fadeOut') {
+                    this.opacity -= this.fadeSpeed;
+                    if (this.opacity <= 0) {
+                        this.reset(false); // Al resetear, reaparece arriba
+                    }
+                }
+
+                if (this.y > canvas.height + 40) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.opacity;
+                ctx.fillStyle = this.icon.color;
+                ctx.font = `900 ${this.size}px "Font Awesome 6 Free"`; // Peso 900 obligatorio para iconos solidos
+                ctx.textAlign = 'center';
+                ctx.fillText(this.icon.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const particleCount = Math.min(50, Math.floor(window.innerWidth / 30));
+            for (let i = 0; i < particleCount; i++) {
+                // Al cargar por primera vez nacen arriba para evitar desorden aleatorio
+                particles.push(new Particle(false)); 
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            canvasAnimationId = requestAnimationFrame(animateParticles);
+        }
+
+        // CONTROL CRÍTICO: Esperar a que la fuente cargue para no romper los símbolos
+        document.fonts.ready.then(() => {
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
+            }, 100); 
+        });
+
+        // Ver / Ocultar caracteres de contraseña
+        function togglePasswordVisibility() {
+            const input = document.getElementById('passwordInput');
+            const eyeBtn = document.getElementById('eyeBtn').querySelector('i');
+            if (input.type === "password") {
+                input.type = "text";
+                eyeBtn.className = "fa-solid fa-eye-slash";
+            } else {
+                input.type = "password";
+                eyeBtn.className = "fa-solid fa-eye";
+            }
+        }
+
+
+        // --- LOGICA APP ---
+        function checkPassword() {
+            const input = document.getElementById('passwordInput').value.trim();
+            if (input === correctPassword) {
+                cancelAnimationFrame(canvasAnimationId); 
+                document.getElementById('lockScreen').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+                init();
+            } else {
+                document.getElementById('errorMsg').textContent = "Contraseña Incorrecta";
+                document.getElementById('passwordInput').value = '';
+                setTimeout(() => document.getElementById('errorMsg').textContent = '', 2500);
+            }
+        }
+
+        function getFilteredVideos() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            let result = videos;
+
+            if (currentTab === 'favorites') {
+                result = result.filter(v => favorites.includes(v.id));
+            } else if (currentTab !== 'all') {
+                result = result.filter(v => v.category === currentTab);
+            }
+
+            if (query) {
+                result = result.filter(v => v.title.toLowerCase().includes(query));
+            }
+            return result;
+        }
+
+        function renderFeed() {
+            const grid = document.getElementById('videosGrid');
+            grid.innerHTML = '';
+            
+            const filtered = getFilteredVideos();
+
+            if(filtered.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; color:var(--text-sub);">No hay videos disponibles en esta sección.</div>`;
+                return;
+            }
+
+            filtered.forEach(video => {
+                const isFav = favorites.includes(video.id);
+                const card = document.createElement('div');
+                card.className = 'yt-card';
+                card.onclick = () => playVideo(video.id);
+                
+                card.innerHTML = `
+                    <div class="yt-thumbnail">
+                        <img src="${video.thumb}" alt="${video.title}">
+                    </div>
+                    <div class="yt-details">
+                        <div class="yt-info">
+                            <h4>${video.title}</h4>
+                            <div class="creator">${video.creator}</div>
+                            <span class="tag tag-${video.category}">${video.category}</span>
+                        </div>
+                        <button onclick="event.stopImmediatePropagation(); toggleFavorite(${video.id});" 
+                                class="fav-card-btn ${isFav ? 'active' : ''}">
+                            <i class="${isFav ? 'fa-solid' : 'fa-regular'} fa-heart"></i>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderSidebarList() {
+            const container = document.getElementById('nextVideosContainer');
+            container.innerHTML = '';
+            
+            const currentTitle = document.getElementById('mainTitle').textContent;
+            const recommended = videos.filter(v => v.title !== currentTitle);
+
+            recommended.forEach(video => {
+                const card = document.createElement('div');
+                card.style.display = 'flex';
+                card.style.gap = '8px';
+                card.style.cursor = 'pointer';
+                card.onclick = () => playVideo(video.id);
+
+                card.innerHTML = `
+                    <img src="${video.thumb}" style="width:120px; aspect-ratio:16/9; object-fit:cover; border-radius:8px; background:#000;">
+                    <div style="flex:1;">
+                        <h4 style="font-size:12px; font-weight:600; line-height:1.3; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${video.title}</h4>
+                        <div style="font-size:11px; color:var(--text-sub); margin-top:2px;">${video.creator}</div>
+                        <span class="tag tag-${video.category}" style="font-size:8px; padding:1px 4px;">${video.category}</span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function playVideo(id) {
+            const video = videos.find(v => v.id === id);
+            if (!video) return;
+
+            isPlaying = true;
+            
+            document.getElementById('videosGrid').style.display = 'none';
+            document.getElementById('mainContentArea').classList.remove('feed-mode');
+            document.getElementById('playerSection').classList.add('active');
+            document.getElementById('sidebarNextList').classList.add('active');
+
+            document.getElementById('mainTitle').textContent = video.title;
+            document.getElementById('mainCreator').textContent = video.creator;
+            
+            const player = document.getElementById('mainPlayer');
+            player.src = video.src;
+            player.load();
+            player.play().catch(() => {});
+
+            updateCurrentFavoriteButton(id);
+            renderSidebarList();
+        }
+
+        function toggleFavorite(id) {
+            if (favorites.includes(id)) {
+                favorites = favorites.filter(f => f !== id);
+            } else {
+                favorites.push(id);
+            }
+            localStorage.setItem('vivatubeFavorites', JSON.stringify(favorites));
+            
+            renderFeed();
+            if (isPlaying) {
+                renderSidebarList();
+                const currentVideo = videos.find(v => v.title === document.getElementById('mainTitle').textContent);
+                if (currentVideo) updateCurrentFavoriteButton(currentVideo.id);
+            }
+        }
+
+        function toggleFavoriteCurrent() {
+            const title = document.getElementById('mainTitle').textContent;
+            const video = videos.find(v => v.title === title);
+            if (video) toggleFavorite(video.id);
+        }
+
+        function updateCurrentFavoriteButton(id) {
+            const btn = document.getElementById('currentFavoriteBtn');
+            const isFav = favorites.includes(id);
+            btn.classList.toggle('active', isFav);
+            btn.querySelector('span').textContent = isFav ? 'Guardado en favoritos' : 'Añadir a favoritos';
+        }
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            isPlaying = false;
+
+            const tabs = ['all', 'favorites', 'horror', 'funny', 'games', 'movies'];
+            tabs.forEach(t => {
+                document.getElementById(`side-${t}`).classList.toggle('active', t === tabId);
+            });
+
+            document.getElementById('playerSection').classList.remove('active');
+            document.getElementById('sidebarNextList').classList.remove('active');
+            document.getElementById('mainContentArea').classList.add('feed-mode');
+            document.getElementById('videosGrid').style.display = 'grid';
+            
+            const player = document.getElementById('mainPlayer');
+            player.pause();
+
+            renderFeed();
+        }
+
+        function filterVideos() {
+            if(isPlaying && document.getElementById('searchInput').value.trim() !== "") {
+                switchTab('all');
+            } else {
+                renderFeed();
+            }
+        }
+
+        function init() {
+            renderFeed();
+        }
+
+        document.getElementById('passwordInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') checkPassword();
+        });
+    </script>
+</body>
+</html>
